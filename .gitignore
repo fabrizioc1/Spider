@@ -1,0 +1,5 @@
+*.beam
+*.dump
+*.config
+*.session
+*.log

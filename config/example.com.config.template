@@ -1,0 +1,2 @@
+%% Sample configuration file to use for crawling
+{spider_config,5,["\\.jpg$","\\.gif$","\\.png$","\\.css$","\\.js$","\\.flv$","\\.swf$"],[]}.
