@@ -7,7 +7,7 @@
 -module(spider_config).
 -purpose('Spider configuration module').
 -author('fabrizioc1@yahoo.com').
--include("spider_config.hrl").
+-include("../include/spider_config.hrl").
 -compile([export_all]).
 
 new() -> #spider_config{max_depth=100,exclude_filters=[],page_handlers=[]}.
