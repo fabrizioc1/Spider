@@ -10,7 +10,7 @@
 -include("../include/spider_config.hrl").
 -compile([export_all]).
 
-new() -> #spider_config{max_depth=100,exclude_filters=[],page_handlers=[]}.
+new() -> #spider_config{max_depth=10,exclude_filters=[],page_handlers=[]}.
 
 read(Filename) -> 
     case file:consult(Filename) of
@@ -22,7 +22,7 @@ max_depth(Config) -> Config#spider_config.max_depth.
 
 filename(Url) -> spider_uri:host(Url)++".config".
 
-config(Url) ->  read(filename(Url)).
+config(Url) -> read(path(Url)).
 
 exclude_filter(Config) when is_record(Config,spider_config) -> fun(Link) -> is_excluded_link(Link,Config) end;
 exclude_filter(Url) -> exclude_filter(config(Url)).
@@ -38,6 +38,9 @@ exclude_regexp(Config) ->
     Filters = Config#spider_config.exclude_filters,
     string:join(Filters,"|").
 
-
-
+path() -> 
+    {file,ModulePath} = code:is_loaded(spider_config),
+    filename:join(filename:dirname(filename:dirname(ModulePath)),"config").
     
+path(Url) ->
+    filename:join(path(),filename(Url)).
