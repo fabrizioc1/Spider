@@ -35,6 +35,14 @@ find_links_async(SitemapUrl) ->
         {done,Links} -> Links
     end.
 
+find_links_async2(SitemapUrl) ->
+    ExcludeFilter = spider_config:exclude_filter(SitemapUrl),
+    GetLinks      = fun(Link) -> spider:get_local_links(Link,ExcludeFilter) end,
+    SitemapLinks  = GetLinks(SitemapUrl),
+    ChildLinks    = parallel:map(GetLinks,SitemapLinks),
+    LinkCollector = fun(X,Acc) -> lists:append(Acc,X) end,
+    spider:unique_links(lists:foldl(LinkCollector,[],ChildLinks)).
+
 %%
 %% Shortcuts to retrieve child links from a url
 %%
@@ -49,7 +57,7 @@ get_links(ParentPid,Url,ExcludeFilter) ->
     ParentPid ! {self(),merge,Url,spider:get_local_links(Url,ExcludeFilter)}.
     
 get_links_function(Url) ->
-    ExcludeFilter = spider_config:exclude_filter(Url),    
+    ExcludeFilter = spider_config:exclude_filter(Url),
     fun(X) -> spider:get_local_links(X,ExcludeFilter) end.
 
 %%
@@ -58,14 +66,14 @@ get_links_function(Url) ->
 collector_start(ReplyPid,ParentLinks) ->
     spawn(fun() -> collector_loop(ReplyPid,ParentLinks,[],[]) end).
 
-collector_loop(ReplyPid,ParentLinks,CollectedLinks,CurrentLinks) when length(ParentLinks) =:= length(CollectedLinks) -> 
+collector_loop(ReplyPid,ParentLinks,CollectedLinks,CurrentLinks) when length(CollectedLinks) >= length(ParentLinks) -> 
     UniqueLinks = sets:to_list(sets:from_list(CurrentLinks)),
     ReplyPid ! {done, UniqueLinks};
 
 collector_loop(ReplyPid,ParentLinks,CollectedLinks,CurrentLinks) ->
     receive
         {_From,merge,Url,FoundLinks} ->
-            %%io:format("[Collector] Merging links from ~p~n",[Url]),
+            io:format("[Collector] Merging links from ~p~n",[Url]),
             %%NewCollectedLinks = lists:sort(CollectedLinks++[Url]), 
             %%MergedLinks = sets:to_list(sets:from_list(CurrentLinks++FoundLinks)),
             NewCurrentLinks = CurrentLinks++FoundLinks,                        
